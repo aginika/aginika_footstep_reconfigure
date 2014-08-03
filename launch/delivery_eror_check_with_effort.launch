@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="aginika_footprint_reconfigure" name="delivery_error_check" type="delivery_error_check_with_effort" output="screen">
+    <remap from="~input" to="/joint_states" />
+    <param name="threshold" value="2"/>
+  </node>
+</launch>
