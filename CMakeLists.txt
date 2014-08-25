@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   tf2
-  jsk_debug_tools
   dynamic_reconfigure
 )
 
@@ -58,11 +57,10 @@ find_package(catkin REQUIRED COMPONENTS
 #   Message2.msg
 # )
 
-## Generate services in the 'srv' folder
+# ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
-#   Service1.srv
-#   Service2.srv
+#   SetFilterMode.srv
 # )
 
 ## Generate actions in the 'action' folder
@@ -75,7 +73,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   pcl_msgs#   sensor_msgs#   std_msgs
+#   pcl_msgs
+#   sensor_msgs
+#   std_msgs
 # )
 
 ###################################
@@ -90,7 +90,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES aginika_footprint_reconfigure
-  CATKIN_DEPENDS pcl_msgs pcl_ros roscpp roseus rospy sensor_msgs std_msgs tf tf2 jsk_debug_tools dynamic_reconfigure
+  CATKIN_DEPENDS pcl_msgs pcl_ros roscpp roseus rospy sensor_msgs std_msgs tf tf2 dynamic_reconfigure
   DEPENDS pcl
 )
 

@@ -18,7 +18,19 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/project_inliers.h>
 #include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/surface/convex_hull.h>
+
+#include <pcl/search/kdtree.h>
+#include <pcl/common/centroid.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/common/distances.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
+//#include <pcl/surface/convex_hull.h>
+#include <pcl/surface/concave_hull.h>
 
 #include <jsk_pcl_ros/SetPointCloud2.h>
 #include <string>
@@ -244,11 +256,14 @@ public:
 
     //convexHull
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_hull (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::ConvexHull<pcl::PointXYZ> chull;
+
+    pcl::ConcaveHull<pcl::PointXYZ> chull;
+
     chull.setInputCloud (default_points);
     chull.reconstruct (*cloud_hull);
 
-    std::cerr << "Convex hull has: " << cloud_hull->points.size () << " data points." << std::endl;
+    // std::cerr << "Convex hull has: " << cloud_hull->points.size () << " data points." << std::endl;
+
     //return it
     return fpp.parse_to_string(cloud_hull);
   }
