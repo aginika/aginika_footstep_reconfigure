@@ -31,7 +31,7 @@
 
 //#include <pcl/surface/convex_hull.h>
 #include <pcl/surface/concave_hull.h>
-
+#include <jsk_pcl_ros/BoundingBoxArray.h>
 #include <jsk_pcl_ros/SetPointCloud2.h>
 #include <string>
 #include <map>
@@ -133,19 +133,37 @@ public:
     if (!n_.getParam("consider_robotarms", consider_robotarms_))
       {
         ROS_WARN("~consider_robotarms is not specified");
-        consider_robotarms_ = false;
+        consider_robotarms_ = true;
       }
 
     if (!n_.getParam("consider_cloud", consider_cloud_))
       {
         ROS_WARN("~consider_cloud is not specified");
-        consider_cloud_ = true;
+        consider_cloud_ = false;
       }
 
     if (!n_.getParam("default_footprint_string", default_footprint_string_))
       {
         ROS_WARN("~default_footprint_string is not specified");
         default_footprint_string_ = std::string("[[-0.34,-0.34],[-0.44,-0.19],[-0.44,0.19],[-0.34,0.34],[0.34,0.34],[0.39,0],[0.34,-0.34]]");
+      }
+
+    if (!n_.getParam("box_offset", box_offset_))
+      {
+        ROS_WARN("~box_offset is not specified");
+        box_offset_ = 0;
+      }
+
+    if (!n_.getParam("height", height_))
+      {
+        ROS_WARN("~height is not specified");
+	height_ = 20.0;
+      }
+
+    if (!n_.getParam("frame_id", frame_id_))
+      {
+        ROS_WARN("~frame_id is not specified");
+	frame_id_ = "base_footprint";
       }
 
 
@@ -161,7 +179,9 @@ public:
     }
 
     srv_ = n_.advertiseService("reconfigure_costmap_footprint", &CostmapFootPrintReconfigure::request_cloud, this);
-    sub_ = n_.subscribe("input", 1, &CostmapFootPrintReconfigure::cloud_cb,this);;
+    sub_ = n_.subscribe("input", 1, &CostmapFootPrintReconfigure::cloud_cb,this);
+    pub_ = n_.advertise<jsk_pcl_ros::BoundingBox>("box", 1);
+
   }
 
   void
@@ -259,8 +279,34 @@ public:
 
     pcl::ConcaveHull<pcl::PointXYZ> chull;
 
+    chull.setAlpha(10);
     chull.setInputCloud (default_points);
     chull.reconstruct (*cloud_hull);
+
+    {
+      jsk_pcl_ros::BoundingBox bounding_box;
+      Eigen::Vector4f minpt, maxpt;
+      pcl::getMinMax3D<pcl::PointXYZ>(*cloud_hull, minpt, maxpt);
+      double xwidth = maxpt[0] - minpt[0];
+      double ywidth = maxpt[1] - minpt[1];
+      double zwidth = maxpt[2] - minpt[2];
+      Eigen::Vector4f center2((maxpt[0] + minpt[0]) / 2.0, (maxpt[1] + minpt[1]) / 2.0, (maxpt[2] + minpt[2]) / 2.0, 1.0);
+      bounding_box.header.frame_id =frame_id_;
+      bounding_box.header.stamp = ros::Time::now();
+    
+      bounding_box.pose.position.x = center2[0];
+      bounding_box.pose.position.y = center2[1];
+      bounding_box.pose.position.z = center2[2];
+      bounding_box.pose.orientation.x = 0;
+      bounding_box.pose.orientation.y = 0;
+      bounding_box.pose.orientation.z = 0;
+      bounding_box.pose.orientation.w = 1;
+      bounding_box.dimensions.x = xwidth;
+      bounding_box.dimensions.y = ywidth;
+      bounding_box.dimensions.z = zwidth;
+
+      pub_.publish(bounding_box);
+    }
 
     // std::cerr << "Convex hull has: " << cloud_hull->points.size () << " data points." << std::endl;
 
@@ -282,11 +328,15 @@ public:
 
   ros::NodeHandle n_;
   ros::ServiceServer srv_;
+  ros::Publisher pub_;
   std::string default_footprint_string_;
+  std::string frame_id_;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_;
   ros::Subscriber sub_;
   bool consider_robotarms_;
   bool consider_cloud_;
+  double height_;
+  double box_offset_;
   std::vector<std::string> tf_names_;
   std::string basic_coordiname_tf_;
 };
