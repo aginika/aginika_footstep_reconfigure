@@ -157,7 +157,7 @@ public:
     if (!n_.getParam("height", height_))
       {
         ROS_WARN("~height is not specified");
-	height_ = 20.0;
+	height_ = 2.0;
       }
 
     if (!n_.getParam("frame_id", frame_id_))
@@ -180,7 +180,7 @@ public:
 
     srv_ = n_.advertiseService("reconfigure_costmap_footprint", &CostmapFootPrintReconfigure::request_cloud, this);
     sub_ = n_.subscribe("input", 1, &CostmapFootPrintReconfigure::cloud_cb,this);
-    pub_ = n_.advertise<jsk_pcl_ros::BoundingBox>("box", 1);
+    pub_ = n_.advertise<jsk_pcl_ros::BoundingBoxArray>("boxes", 1);
 
   }
 
@@ -284,6 +284,9 @@ public:
     chull.reconstruct (*cloud_hull);
 
     {
+      jsk_pcl_ros::BoundingBoxArray bounding_box_array;
+      bounding_box_array.header.stamp = ros::Time::now();
+      bounding_box_array.header.frame_id = frame_id_;
       jsk_pcl_ros::BoundingBox bounding_box;
       Eigen::Vector4f minpt, maxpt;
       pcl::getMinMax3D<pcl::PointXYZ>(*cloud_hull, minpt, maxpt);
@@ -296,16 +299,17 @@ public:
     
       bounding_box.pose.position.x = center2[0];
       bounding_box.pose.position.y = center2[1];
-      bounding_box.pose.position.z = center2[2];
+      bounding_box.pose.position.z = height_ / 2;
       bounding_box.pose.orientation.x = 0;
       bounding_box.pose.orientation.y = 0;
       bounding_box.pose.orientation.z = 0;
       bounding_box.pose.orientation.w = 1;
-      bounding_box.dimensions.x = xwidth;
-      bounding_box.dimensions.y = ywidth;
-      bounding_box.dimensions.z = zwidth;
+      bounding_box.dimensions.x = xwidth + box_offset_ * 2;
+      bounding_box.dimensions.y = ywidth + box_offset_ * 2;
+      bounding_box.dimensions.z = height_;
 
-      pub_.publish(bounding_box);
+      bounding_box_array.boxes.push_back(bounding_box);
+      pub_.publish(bounding_box_array);
     }
 
     // std::cerr << "Convex hull has: " << cloud_hull->points.size () << " data points." << std::endl;
