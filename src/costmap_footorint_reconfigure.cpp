@@ -181,7 +181,7 @@ public:
     srv_ = n_.advertiseService("reconfigure_costmap_footprint", &CostmapFootPrintReconfigure::request_cloud, this);
     sub_ = n_.subscribe("input", 1, &CostmapFootPrintReconfigure::cloud_cb,this);
     pub_ = n_.advertise<jsk_pcl_ros::BoundingBoxArray>("boxes", 1);
-
+    pub2_ = n_.advertise<jsk_pcl_ros::BoundingBox>("box", 1);
   }
 
   void
@@ -234,8 +234,8 @@ public:
       double_param.value = result_string;
     }
     conf.strs.push_back(double_param);
-    srv_req.config = conf;
-    ros::service::call("/move_base_node/local_costmap/set_parameters", srv_req, srv_resp);
+    // srv_req.config = conf;
+    // ros::service::call("/move_base_node/local_costmap/set_parameters", srv_req, srv_resp);
   }
 
   std::string calcConvexHull()
@@ -308,6 +308,7 @@ public:
       bounding_box.dimensions.y = ywidth + box_offset_ * 2;
       bounding_box.dimensions.z = height_;
 
+      pub2_.publish(bounding_box);
       bounding_box_array.boxes.push_back(bounding_box);
       pub_.publish(bounding_box_array);
     }
@@ -333,6 +334,7 @@ public:
   ros::NodeHandle n_;
   ros::ServiceServer srv_;
   ros::Publisher pub_;
+  ros::Publisher pub2_;
   std::string default_footprint_string_;
   std::string frame_id_;
   pcl::PointCloud<pcl::PointXYZ>::Ptr target_cloud_;
