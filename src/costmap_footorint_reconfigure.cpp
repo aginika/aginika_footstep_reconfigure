@@ -181,7 +181,7 @@ public:
     srv_ = n_.advertiseService("reconfigure_costmap_footprint", &CostmapFootPrintReconfigure::request_cloud, this);
     sub_ = n_.subscribe("input", 1, &CostmapFootPrintReconfigure::cloud_cb,this);
     pub_ = n_.advertise<jsk_recognition_msgs::BoundingBoxArray>("boxes", 1);
-    pub2_ = n_.advertise<jsk_pcl_ros::BoundingBox>("box", 1);
+    pub2_ = n_.advertise<jsk_recognition_msgs::BoundingBox>("box", 1);
   }
 
   void
@@ -287,7 +287,7 @@ public:
       jsk_recognition_msgs::BoundingBoxArray bounding_box_array;
       bounding_box_array.header.stamp = ros::Time::now();
       bounding_box_array.header.frame_id = frame_id_;
-      jsk_pcl_ros::BoundingBox bounding_box;
+      jsk_recognition_msgs::BoundingBox bounding_box;
       Eigen::Vector4f minpt, maxpt;
       pcl::getMinMax3D<pcl::PointXYZ>(*cloud_hull, minpt, maxpt);
       double xwidth = maxpt[0] - minpt[0];
